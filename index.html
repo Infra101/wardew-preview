@@ -667,6 +667,24 @@ button.more:hover .arr { transform: translateX(4px) rotate(-45deg); }
 .m-globe { width: min(320px, 80%); margin: 6px auto 30px; color: rgba(246, 238, 234, .85); }
 .m-contact { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; }
 
+/* ==========================================================
+   Calmer background (feedback: too busy)
+   ========================================================== */
+.fx-beams i { animation: none; opacity: .35; transform: rotate(24deg); }
+.fx-grain { animation: none; opacity: .045; }
+
+/* card animations play when the card arrives (.live, a few seconds) or on hover/focus, otherwise rest */
+.glyph .gl *, .scene .gl * { animation-play-state: paused; }
+.live .gl *, .card:hover .gl *, .card:focus-visible .gl *, .m-globe .gl * { animation-play-state: running; }
+
+/* isometric building: what each system does */
+.iso-detail { grid-column: 1 / -1; margin-top: 18px; padding: 18px 22px; border-radius: 16px; border: 1px solid var(--line); background: var(--glass); min-height: 96px; display: grid; grid-template-columns: auto 1fr; gap: 6px 18px; align-items: baseline; }
+.iso-detail .n { font-family: var(--mono); font-size: 12px; color: var(--spark); grid-row: span 2; }
+.iso-detail b { font-family: var(--display); font-weight: 400; font-size: 1.35rem; }
+.iso-detail p { color: var(--steel); margin: 0; }
+.iso-detail.swap > * { animation: hudIn .6s var(--spring); }
+.iso-list li { cursor: pointer; }
+
 </style>
 </head>
 <body>
@@ -1172,7 +1190,7 @@ button.more:hover .arr { transform: translateX(4px) rotate(-45deg); }
   <div class="copy">
     <p class="kicker" data-scramble>Applications</p>
     <h2 class="h2" data-split>Twelve systems, <em>one building brain.</em></h2>
-    <p class="lead" data-reveal>Hover or tap a system to light it up.</p>
+    <p class="lead" data-reveal>Point at or tap a system to see what it does, and watch it light up in the building.</p>
   </div>
   <div class="iso-wrap" data-iso>
     <div class="iso-stage"><div class="iso" aria-hidden="true">
@@ -1189,14 +1207,17 @@ button.more:hover .arr { transform: translateX(4px) rotate(-45deg); }
       <div class="blk" style="--i:10;--hgt:50px"><i class="s1"></i><i class="s2"></i><i class="top"></i></div>
       <div class="blk" style="--i:11;--hgt:26px"><i class="s1"></i><i class="s2"></i><i class="top"></i></div>
     </div></div>
+    <div class="iso-side">
     <ul class="iso-list">
-      <li><span>01</span>Smart Access Control</li><li><span>02</span>Building Automation</li>
-      <li><span>03</span>Occupancy &amp; Space Management</li><li><span>04</span>Security Systems</li>
-      <li><span>05</span>Remote Management</li><li><span>06</span>Lighting Control</li>
-      <li><span>07</span>Integration with IoT Devices</li><li><span>08</span>Data Analytics &amp; Reporting</li>
-      <li><span>09</span>Climate Control</li><li><span>10</span>Energy Management</li>
-      <li><span>11</span>Maintenance &amp; Alerts</li><li><span>12</span>Environmental Monitoring</li>
+      <li data-desc="Biometric and mobile-enabled entry systems, so only authorised people have access to your building."><span>01</span>Smart Access Control</li><li data-desc="Routine tasks such as adjusting lighting, locking doors or managing climate settings run on pre-set schedules."><span>02</span>Building Automation</li>
+      <li data-desc="Real-time occupancy levels show how your spaces are used, so you can make the most of every room."><span>03</span>Occupancy &amp; Space Management</li><li data-desc="24/7 monitoring with surveillance cameras, motion detectors and real-time alerts."><span>04</span>Security Systems</li>
+      <li data-desc="Monitor and control every part of your building from anywhere, on a single platform."><span>05</span>Remote Management</li><li data-desc="Lighting that adapts to daylight, occupancy and time of day, saving energy and keeping spaces pleasant."><span>06</span>Lighting Control</li>
+      <li data-desc="HVAC, lighting, security and more communicate seamlessly as one connected network."><span>07</span>Integration with IoT Devices</li><li data-desc="Raw building data turned into actionable insights, to optimise operations and reduce costs."><span>08</span>Data Analytics &amp; Reporting</li>
+      <li data-desc="HVAC settings adjust automatically from real-time data, for comfort with lower energy use and cost."><span>09</span>Climate Control</li><li data-desc="Energy use tracked and optimised across the building, cutting costs and carbon footprint."><span>10</span>Energy Management</li>
+      <li data-desc="Equipment performance is monitored and automated alerts are sent when issues arise, preventing downtime and costly repairs."><span>11</span>Maintenance &amp; Alerts</li><li data-desc="Air quality, temperature and humidity monitored for a healthy, comfortable environment."><span>12</span>Environmental Monitoring</li>
     </ul>
+    <div class="iso-detail" aria-live="polite"><span class="n">01</span><b>Smart Access Control</b><p>Biometric and mobile-enabled entry systems, so only authorised people have access to your building.</p></div>
+    </div>
   </div>
 </section>
 
@@ -1889,8 +1910,7 @@ async function initParticles(canvas, logo, opts) {
   function frame(dt, scrollVel, noRender) {
     time += dt;
     const t = time, f = Math.min(dt * 60, 2.5);
-    cur.update && cur.update(t); cur.updateB && cur.updateB(t);
-    if (prev !== cur) { prev.update && prev.update(t); prev.updateB && prev.updateB(t); }
+    // shapes are posed once when generated and then hold still (no spin, ripple or twinkle)
 
     // group layout spring (bouncy)
     const narrow = halfW < 3.4;
@@ -1907,8 +1927,8 @@ async function initParticles(canvas, logo, opts) {
     grp.vs = (grp.vs + (sc - grp.s) * 0.04 * f) * Math.pow(0.8, f); grp.s += grp.vs * f;
     group.position.set(grp.x, grp.y, 0); group.scale.setScalar(grp.s);
     ptr.tx += ((ptr.on ? ptr.nx : 0) - ptr.tx) * 0.05 * f; ptr.ty += ((ptr.on ? ptr.ny : 0) - ptr.ty) * 0.05 * f;
-    group.rotation.y = ptr.tx * 0.3 + Math.sin(t * 0.17) * 0.06;
-    group.rotation.x = -ptr.ty * 0.18 + scrollVel * 0.0015;
+    group.rotation.y = ptr.tx * 0.12;
+    group.rotation.x = -ptr.ty * 0.07;
     const opT = (narrow && side !== 'hero' ? 0.62 : 1) * (dim ? 0.55 : 1);
     mat.uniforms.uOpacity.value += (opT - mat.uniforms.uOpacity.value) * 0.05;
 
@@ -1916,12 +1936,10 @@ async function initParticles(canvas, logo, opts) {
     while (waves.length && t - waves[0].t0 > 1.3) waves.shift();
 
     const CP = cur.p, PP = prev.p, CB = cur.b, PB = prev.b;
-    const sv = Math.min(Math.abs(scrollVel) * 0.0012, 0.03);
-    const swirl = reduce ? 0 : 0.011 + sv;
-    const damp = Math.pow(reduce ? 0.72 : 0.855, f);
-    const rep = (reduce ? 0 : 0.016) * cur.repel, RR = 1.15 * (cur.repel > 1 ? 1.4 : 1), R2 = RR * RR;
+    const swirl = reduce ? 0 : 0.009;   // only matters while a particle is travelling to its target
+    const damp = Math.pow(reduce ? 0.72 : 0.8, f);   // settles with one soft overshoot instead of wobbling
+    const rep = (reduce ? 0 : 0.007) * cur.repel, RR = 1.15 * (cur.repel > 1 ? 1.4 : 1), R2 = RR * RR;
     const pon = ptr.on && !reduce, lx = ptr.px, ly = ptr.py, pvx = ptr.vx, pvy = ptr.vy;
-    const drift = -scrollVel * 0.00025;
     const nw = waves.length;
 
     for (let i = 0, j = 0; i < N; i++, j += 3) {
@@ -1930,7 +1948,7 @@ async function initParticles(canvas, logo, opts) {
       let px = P[j], py = P[j + 1], pz = P[j + 2];
       const dx = T[j] - px, dy = T[j + 1] - py, dz = T[j + 2] - pz;
       const k = K[i];
-      let ax = dx * k, ay = dy * k + drift * Rd[i], az = dz * k;
+      let ax = dx * k, ay = dy * k, az = dz * k;
       const d = Math.sqrt(dx * dx + dy * dy + dz * dz);
       const s = Math.min(d, 2.6) * swirl;
       if (s > 0.0004) {
@@ -1939,12 +1957,11 @@ async function initParticles(canvas, logo, opts) {
         ay += (Math.sin(pz * 1.5 + t * 0.7) + Math.cos(px * 1.1 + t * 0.8 + ph)) * s + px * s * 0.55;
         az += (Math.sin(px * 1.9 - t * 0.6) + Math.cos(py * 1.2 + t * 0.4)) * s;
       }
-      ax += Math.sin(t * 1.1 + Sd[i] * 7) * 0.0006; ay += Math.cos(t * 0.9 + Sd[i] * 5) * 0.0006;
       if (pon) {
         const mx = px - lx, my = py - ly, m2 = mx * mx + my * my;
         if (m2 < R2) {
           const ff = 1 - m2 / R2, inv = 1 / (Math.sqrt(m2) + 0.05);
-          ax += mx * inv * ff * rep + pvx * ff * 0.06; ay += my * inv * ff * rep + pvy * ff * 0.06; az += ff * rep * 0.6;
+          ax += mx * inv * ff * rep + pvx * ff * 0.025; ay += my * inv * ff * rep + pvy * ff * 0.025; az += ff * rep * 0.6;
         }
       }
       for (let w = 0; w < nw; w++) {
@@ -2376,6 +2393,12 @@ function splitWords(el) {
 function onIn(el) {
   if (el.hasAttribute('data-scramble') && !reduce) setTimeout(() => scramble(el), root.classList.contains('loading') ? 1500 : 0);
   if (el.hasAttribute('data-board')) runBoard(el);
+  // card animations run for a few seconds as they arrive, then rest until hovered
+  if (el.hasAttribute('data-stagger')) [...el.children].forEach((c, i) => {
+    if (!c.querySelector('.gl')) return;
+    c.classList.add('live');
+    setTimeout(() => c.classList.remove('live'), (root.classList.contains('loading') ? 5500 : 4000) + i * 70);
+  });
 }
 
 // text scramble for kickers
@@ -2432,22 +2455,31 @@ function gearPath(p) {
 
 // ---------------------------------------------------------------- isometric building
 function setupIso(wrap) {
-  const blks = $$('.blk', wrap), items = $$('.iso-list li', wrap);
-  const light = (i, on) => { blks[i] && blks[i].classList.toggle('lit', on); blks[i] && blks[i].classList.toggle('hl', on); items[i] && items[i].classList.toggle('hl', on); };
-  let manual = false, auto = 0;
+  // Pointing at (or tapping) a system lights its block and shows what it does.
+  // When nobody is pointing, it slowly steps through the systems on its own.
+  const blks = $$('.blk', wrap), items = $$('.iso-list li', wrap), detail = $('.iso-detail', wrap);
+  let manual = false, cur = -1, auto = 0;
+  function select(i) {
+    if (i === cur) return; cur = i;
+    blks.forEach((b, k) => { b.classList.toggle('lit', k === i); b.classList.toggle('hl', k === i); });
+    items.forEach((li, k) => li.classList.toggle('hl', k === i));
+    const li = items[i];
+    detail.innerHTML = `<span class="n">${String(i + 1).padStart(2, '0')}</span><b>${li.lastChild.textContent}</b><p>${li.dataset.desc}</p>`;
+    detail.classList.remove('swap'); void detail.offsetWidth; detail.classList.add('swap');
+  }
   items.forEach((li, i) => {
-    li.addEventListener('pointerenter', () => { manual = true; blks.forEach((_, k) => light(k, false)); light(i, true); gl && gl.shock(ptr.x, ptr.y, 0.4); });
-    li.addEventListener('pointerleave', () => { light(i, false); manual = false; });
+    li.tabIndex = 0;
+    li.addEventListener('pointerenter', () => { manual = true; select(i); });
+    li.addEventListener('click', () => { manual = true; select(i); });
+    li.addEventListener('focus', () => { manual = true; select(i); });
   });
-  blks.forEach((b, i) => b.addEventListener('pointerenter', () => { manual = true; blks.forEach((_, k) => light(k, false)); light(i, true); }));
-  $('.iso', wrap).addEventListener('pointerleave', () => { blks.forEach((_, k) => light(k, false)); manual = false; });
-  // when idle, the building "thinks": systems light up in sequence
+  blks.forEach((b, i) => b.addEventListener('pointerenter', () => { manual = true; select(i); }));
+  wrap.addEventListener('pointerleave', () => { manual = false; });
+  select(0);
   isoTimers.push(setInterval(() => {
     if (manual || !wrap.classList.contains('in')) return;
-    blks.forEach(b => b.classList.remove('lit'));
-    for (let k = 0; k < 3; k++) blks[(auto + k * 5) % blks.length].classList.add('lit');
-    auto = (auto + 1) % blks.length;
-  }, 900));
+    auto = (cur + 1) % blks.length; select(auto);
+  }, 3200));
 }
 
 // ---------------------------------------------------------------- ASCII field
