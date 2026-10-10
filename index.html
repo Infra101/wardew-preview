@@ -675,7 +675,7 @@ button.more:hover .arr { transform: translateX(4px) rotate(-45deg); }
 
 /* card animations play when the card arrives (.live, a few seconds) or on hover/focus, otherwise rest */
 .glyph .gl *, .scene .gl * { animation-play-state: paused; }
-.live .gl *, .card:hover .gl *, .card:focus-visible .gl *, .m-globe .gl * { animation-play-state: running; }
+.live .gl *, .live.gl *, .card:hover .gl *, .card:focus-visible .gl * { animation-play-state: running; }
 
 /* isometric building: what each system does */
 .iso-detail { grid-column: 1 / -1; margin-top: 18px; padding: 18px 22px; border-radius: 16px; border: 1px solid var(--line); background: var(--glass); min-height: 96px; display: grid; grid-template-columns: auto 1fr; gap: 6px 18px; align-items: baseline; }
@@ -684,6 +684,22 @@ button.more:hover .arr { transform: translateX(4px) rotate(-45deg); }
 .iso-detail p { color: var(--steel); margin: 0; }
 .iso-detail.swap > * { animation: hudIn .6s var(--spring); }
 .iso-list li { cursor: pointer; }
+
+/* ==========================================================
+   Move, then stop (feedback: nothing should float the whole time)
+   ========================================================== */
+.blob { animation-play-state: paused; }
+.person:hover .blob, .card:hover .blob { animation-play-state: running; }
+.blob.xl { animation-iteration-count: 1; animation-play-state: running; }
+.m-avatar::before, .m-avatar::after { animation-iteration-count: 1; animation-timing-function: cubic-bezier(.16, 1, .3, 1); }
+.in .neon, .neon.in { animation: neonOn 1.6s steps(1) .9s forwards; }
+.board-head .live::before { animation: none; }
+.scroll-cue i::after { animation-iteration-count: 3; }
+.floor::before { animation-iteration-count: 2; }
+.spin { animation: spin 6s cubic-bezier(.4, 0, .2, 1) 1; }
+.spin.rev { animation-duration: 6s; animation-direction: reverse; }
+.client b { animation-iteration-count: 1; }
+.client::after { animation: orbit 3s cubic-bezier(.16, 1, .3, 1) 1 forwards; }
 
 </style>
 </head>
@@ -1927,8 +1943,7 @@ async function initParticles(canvas, logo, opts) {
     grp.vs = (grp.vs + (sc - grp.s) * 0.04 * f) * Math.pow(0.8, f); grp.s += grp.vs * f;
     group.position.set(grp.x, grp.y, 0); group.scale.setScalar(grp.s);
     ptr.tx += ((ptr.on ? ptr.nx : 0) - ptr.tx) * 0.05 * f; ptr.ty += ((ptr.on ? ptr.ny : 0) - ptr.ty) * 0.05 * f;
-    group.rotation.y = ptr.tx * 0.12;
-    group.rotation.x = -ptr.ty * 0.07;
+    group.rotation.set(0, 0, 0);   // no mouse tilt: the field only moves when a shape changes or on click
     const opT = (narrow && side !== 'hero' ? 0.62 : 1) * (dim ? 0.55 : 1);
     mat.uniforms.uOpacity.value += (opT - mat.uniforms.uOpacity.value) * 0.05;
 
@@ -1938,8 +1953,8 @@ async function initParticles(canvas, logo, opts) {
     const CP = cur.p, PP = prev.p, CB = cur.b, PB = prev.b;
     const swirl = reduce ? 0 : 0.009;   // only matters while a particle is travelling to its target
     const damp = Math.pow(reduce ? 0.72 : 0.8, f);   // settles with one soft overshoot instead of wobbling
-    const rep = (reduce ? 0 : 0.007) * cur.repel, RR = 1.15 * (cur.repel > 1 ? 1.4 : 1), R2 = RR * RR;
-    const pon = ptr.on && !reduce, lx = ptr.px, ly = ptr.py, pvx = ptr.vx, pvy = ptr.vy;
+    const rep = 0 * cur.repel, RR = 1.15 * (cur.repel > 1 ? 1.4 : 1), R2 = RR * RR;
+    const pon = false, lx = ptr.px, ly = ptr.py, pvx = ptr.vx, pvy = ptr.vy;
     const nw = waves.length;
 
     for (let i = 0, j = 0; i < N; i++, j += 3) {
@@ -2313,7 +2328,7 @@ function openModal(html, from) {
     modal.style.setProperty('--cy', (from ? from.y : innerHeight / 2) + 'px');
   }
   mBody.innerHTML = html;
-  $$('[data-glyph]', mBody).forEach(g => { g.innerHTML = GLYPHS[g.dataset.glyph] || ''; });
+  $$('[data-glyph]', mBody).forEach(g => { g.innerHTML = GLYPHS[g.dataset.glyph] || ''; g.classList.add('live'); setTimeout(() => g.classList.remove('live'), 4500); });
   [...mBody.children].forEach((c, i) => c.style.setProperty('--i', Math.min(i, 8)));
   $$('[data-mag]', mBody).forEach(magnetic); $$('.btn', mBody).forEach(btnFill);
   mScroll.scrollTop = 0; mProg.style.setProperty('--p', 0);
@@ -2476,10 +2491,7 @@ function setupIso(wrap) {
   blks.forEach((b, i) => b.addEventListener('pointerenter', () => { manual = true; select(i); }));
   wrap.addEventListener('pointerleave', () => { manual = false; });
   select(0);
-  isoTimers.push(setInterval(() => {
-    if (manual || !wrap.classList.contains('in')) return;
-    auto = (cur + 1) % blks.length; select(auto);
-  }, 3200));
+
 }
 
 // ---------------------------------------------------------------- ASCII field
@@ -2495,7 +2507,8 @@ function setupAscii(wrap) {
     ctx.font = `${st.cw * 1.25}px "IBM Plex Mono", monospace`; ctx.textBaseline = 'top';
   };
   size(); st.size = size;
-  wrap.addEventListener('pointermove', e => { const r = wrap.getBoundingClientRect(); st.mx = e.clientX - r.left; st.my = e.clientY - r.top; });
+  wrap.addEventListener('pointermove', e => { const r = wrap.getBoundingClientRect(); st.mx = e.clientX - r.left; st.my = e.clientY - r.top; st.until = performance.now() + 1500; });
+  st.until = 0; st.drawn = false;
   wrap.addEventListener('pointerleave', () => { st.mx = st.my = -1e3; });
   st.draw = t => {
     const { ctx, cols, rows, cw, ch } = st;
@@ -2652,7 +2665,7 @@ function tick(now) {
   const skew = clamp(scroll.velS * -0.35, -12, 12);
   marquees.forEach(m => {
     if (!m.w) m.w = m.tr.scrollWidth / 2;
-    m.x -= (0.7 + Math.abs(scroll.velS) * 0.45) * m.dir * f;
+    m.x -= Math.abs(scroll.velS) * 0.45 * m.dir * f;   // moves only while scrolling
     if (m.x <= -m.w) m.x += m.w; if (m.x > 0) m.x -= m.w;
     m.tr.style.transform = `translate3d(${m.x.toFixed(1)}px,0,0) skewX(${skew.toFixed(2)}deg)`;
   });
@@ -2663,7 +2676,11 @@ function tick(now) {
     k.el.style.transform = `translate3d(${((p - 0.5) * 40 * k.dir - 10).toFixed(2)}vw,0,0) skewX(${(skew * 0.6).toFixed(2)}deg)`;
   });
   timelines.forEach(t => { const r = t.getBoundingClientRect(); t.style.setProperty('--p', clamp((innerHeight * 0.75 - r.top) / r.height, 0, 1).toFixed(3)); });
-  asciis.forEach(a => { const r = a.wrap.getBoundingClientRect(); if (r.bottom > 0 && r.top < innerHeight) a.draw(now / 1000); });
+  asciis.forEach(a => {
+    const r = a.wrap.getBoundingClientRect(); if (r.bottom < 0 || r.top > innerHeight) return;
+    if (!a.drawn) { a.drawn = true; a.until = now + 3000; }      // ripples for a few seconds when it first appears
+    if (now < a.until) a.draw(now / 1000);
+  });
 
   // cursor
   if (fine) {
