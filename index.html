@@ -618,7 +618,10 @@ button.more:hover .arr { transform: translateX(4px) rotate(-45deg); }
 @keyframes gPulse { 0%, 100% { transform: scale(.82); opacity: .7; } 50% { transform: scale(1.15); opacity: 1; } }
 @keyframes gFlow { to { stroke-dashoffset: -16; } }
 @keyframes gDraw { 0% { stroke-dashoffset: var(--l); } 45%, 70% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: calc(var(--l) * -1); } }
-@keyframes gMove { from { transform: translate(0, 0); } to { transform: translate(var(--dx, 0), var(--dy, 0)); } }
+/* travel distances must not inherit: a part riding on a moving carriage only moves on its own axis */
+@property --dx { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@property --dy { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@keyframes gMove { from { transform: translate(0, 0); } to { transform: translate(var(--dx, 0px), var(--dy, 0px)); } }
 @keyframes gSlide { from { transform: translateX(0); } to { transform: translateX(var(--dx, 20px)); } }
 @keyframes gGrow { from { transform: scaleY(.25); } to { transform: scaleY(1); } }
 @keyframes gWave { 0% { transform: scale(.4); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
@@ -2071,12 +2074,12 @@ Object.assign(GLYPHS, {
     <circle class="s as k-spin" cx="100" cy="65" r="7" stroke-dasharray="4 3" style="transform-origin:100px 65px;--t:.45s"/><path class="s" d="M107 65h9"/>
     <circle class="sp k-blink" cx="132" cy="56" r="2" style="--t:.7s"/><circle class="a k-blink" cx="132" cy="64" r="2" style="--t:1.1s;--d:.3s"/>
     <path class="s" d="M20 70h30M20 80h30"/><path class="s" d="M24 66h22M24 76h22" opacity=".55"/>
-    <g class="k-move" style="--dx:62px;--t:2.8s"><rect class="s as" x="26" y="15" width="16" height="10" rx="1"/><g class="k-move" style="--dy:20px;--t:1.4s"><path class="s" d="M34 25v14"/><path class="s as" d="M28 39h12M28 39v5M40 39v5"/><rect class="sp" x="27" y="44" width="14" height="3" rx="1.5"/></g></g>`),
+    <g class="k-move" style="--dx:62px;--t:2.8s"><rect class="s as" x="26" y="15" width="16" height="10" rx="1"/><g class="k-move" style="--dx:0px;--dy:20px;--t:1.4s;--d:-1.4s"><path class="s" d="M34 25v14"/><path class="s as" d="M28 39h12M28 39v5M40 39v5"/><rect class="sp" x="27" y="44" width="14" height="3" rx="1.5"/></g></g>`),
   // Brelko: automated conveyor roller shaft processing gantry
   'p-gantry': scene(`<path class="s" d="M8 18h144M14 18v72M146 18v72M4 90h152" /><path class="s" d="M22 74h116"/>
     ${[30, 46, 62, 78, 94, 110, 126].map(x => `<circle class="s k-spin" cx="${x}" cy="79" r="4" stroke-dasharray="3 3" style="transform-origin:${x}px 79px;--t:.8s"/>`).join('')}
     <g class="k-slide" style="--dx:32px;--t:1.8s"><rect class="s as" x="0" y="66" width="22" height="7" rx="3.5"/><rect class="s as" x="32" y="66" width="22" height="7" rx="3.5"/><rect class="s as" x="64" y="66" width="22" height="7" rx="3.5"/><rect class="s as" x="96" y="66" width="22" height="7" rx="3.5"/></g>
-    <g class="k-move" style="--dx:92px;--t:3.2s"><rect class="s" x="24" y="12" width="22" height="13" rx="1"/><g class="k-move" style="--dy:18px;--t:1.6s"><path class="s as" d="M35 25v20"/><circle class="sp k-pulse" cx="35" cy="47" r="3"/></g></g>`),
+    <g class="k-move" style="--dx:92px;--t:3.2s"><rect class="s" x="24" y="12" width="22" height="13" rx="1"/><g class="k-move" style="--dx:0px;--dy:18px;--t:1.6s;--d:-1.6s"><path class="s as" d="M35 25v20"/><circle class="sp k-pulse" cx="35" cy="47" r="3"/></g></g>`),
   // Automated card machine: hopper, feed rollers, encode head, output stack
   'p-card': scene(`<path class="s" d="M6 90h148" opacity=".5"/><rect class="s" x="12" y="28" width="32" height="44" rx="2"/><path class="s" d="M16 38h24M16 45h24M16 52h24M16 59h24M16 66h24" opacity=".55"/>
     <circle class="s as k-spin" cx="54" cy="62" r="5" stroke-dasharray="3 2" style="transform-origin:54px 62px;--t:.5s"/><circle class="s as k-spin" cx="54" cy="76" r="5" stroke-dasharray="3 2" style="transform-origin:54px 76px;--t:.5s;animation-direction:reverse"/>
